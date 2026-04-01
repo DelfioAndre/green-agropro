@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
+    <title>Green Agro Commodities - Sistema de Irrigação Inteligente</title>
+    
+    <!-- Bibliotecas CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest"></script>
+    
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-messaging-compat.js"></script>
+    
+    <!-- Leaflet -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Estilos Externos -->
+    <link rel="stylesheet" href="estilos/styles.css">
+</head>
+<body>
+    <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
+
+    <!-- TELA DE LOGIN -->
+    <div id="login-screen">
+        <div class="login-card">
+            <div class="login-logo">
+                <!-- LOGO PNG (mesma pasta) -->
+                <img src="logo.png" alt="Green Agro Commodities" class="logo-img">
+                <h1>GREEN AGRO COMMODITIES, LIMITADA</h1>
+                <p>Garantia de Produtos de Primeira Qualidade</p>
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-user"></i> Nome do Usuário</label>
+                <input type="text" id="username" value="admin">
+            </div>
+            <div class="form-group">
+                <label><i class="fas fa-lock"></i> Código de Acesso</label>
+                <div class="password-container">
+                    <input type="password" id="access-code" value="1234">
+                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
+                        <i id="passwordToggleIcon" class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+            <button class="btn-login" onclick="fazerLogin()"><i class="fas fa-sign-in-alt"></i> Entrar</button>
+        </div>
+    </div>
+
+    <!-- DASHBOARD -->
+    <div id="dashboard-screen">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-logo">
+                <!-- LOGO PNG (mesma pasta) -->
+                <img src="logo.png" alt="Green Agro Commodities" class="logo-img">
+                <h2>GREEN AGRO COMMODITIES</h2>
+                <p>Produtos de Primeira Qualidade</p>
+            </div>
+            <ul class="sidebar-nav">
+                <li class="nav-item" data-page="dashboard"><a href="javascript:void(0)" onclick="mudarPagina('dashboard')"><i class="fas fa-home"></i><span>Dashboard</span></a></li>
+                <li class="nav-item" data-page="graficos"><a href="javascript:void(0)" onclick="mudarPagina('graficos')"><i class="fas fa-chart-line"></i><span>Gráficos</span></a></li>
+                <li class="nav-item" data-page="dispositivos"><a href="javascript:void(0)" onclick="mudarPagina('dispositivos')"><i class="fas fa-microchip"></i><span>Dispositivos</span></a></li>
+                <li class="nav-item" data-page="alertas"><a href="javascript:void(0)" onclick="mudarPagina('alertas')"><i class="fas fa-exclamation-triangle"></i><span>Alertas</span></a></li>
+                <li class="nav-item" data-page="configuracoes"><a href="javascript:void(0)" onclick="mudarPagina('configuracoes')"><i class="fas fa-cog"></i><span>Configurações</span></a></li>
+            </ul>
+            <div class="sidebar-user"><div class="user-info"><i class="fas fa-user-circle"></i><span id="userDisplay">Usuário</span></div><button class="btn-logout" onclick="logout()"><i class="fas fa-sign-out-alt"></i></button></div>
+        </div>
+
+        <div class="main-content">
+            <div class="content-header">
+                <div class="page-title"><h1 id="pageTitle">Dashboard</h1><p id="pageSubtitle">Visão geral do sistema de irrigação</p></div>
+                <div class="header-datetime"><i class="far fa-calendar"></i><span id="currentDate"></span><i class="far fa-clock"></i><span id="currentTime"></span></div>
+            </div>
+
+            <!-- PÁGINA DASHBOARD -->
+            <div id="page-dashboard" class="page active">
+                <button class="voice-btn" onclick="iniciarEscuta()"><i class="fas fa-microphone"></i> Comando de Voz</button>
+                <div class="weather-card"><i class="fas fa-cloud-sun fa-2x"></i><div id="previsaoConteudo">Carregando previsão...</div></div>
+                <div id="rainAlert" style="display: none;" class="rain-alert"><i class="fas fa-cloud-rain"></i> <span id="rainAlertMsg"></span></div>
+                
+                <div class="sensors-grid">
+                    <div class="sensor-card"><div class="card-header"><div class="card-icon temperature"><i class="fas fa-thermometer-half"></i></div><div><h3>Temperatura</h3><small>DHT11</small></div></div><div class="sensor-value" id="tempValue">--.- °C</div><div class="progress-bar"><div class="progress-fill" id="tempProgress" style="width: 0%"></div></div><div class="sensor-status status-offline" id="tempStatus">⏳ Aguardando dados</div></div>
+                    <div class="sensor-card"><div class="card-header"><div class="card-icon humidity"><i class="fas fa-tint"></i></div><div><h3>Humidade do Ar</h3><small>DHT11</small></div></div><div class="sensor-value" id="humValue">--.- %</div><div class="progress-bar"><div class="progress-fill" id="humProgress" style="width: 0%"></div></div><div class="sensor-status status-offline" id="humStatus">⏳ Aguardando dados</div></div>
+                    <div class="sensor-card"><div class="card-header"><div class="card-icon soil"><i class="fas fa-seedling"></i></div><div><h3>Humidade do Solo</h3><small>Capacitivo</small></div></div><div class="sensor-value" id="soilValue">--.- %</div><div class="progress-bar"><div class="progress-fill" id="soilProgress" style="width: 0%"></div></div><div class="sensor-status status-offline" id="soilStatus">⏳ Aguardando dados</div></div>
+                </div>
+
+                <div class="chart-card"><h3>Histórico 24h</h3><div class="chart-container"><canvas id="mainChart"></canvas></div></div>
+
+                <div class="dashboard-grid">
+                    <div class="status-card">
+                        <h3>Status do Sistema</h3>
+                        <div class="status-item"><span>ESP32</span><span class="status-value offline" id="espStatus">Offline</span></div>
+                        <div class="status-item"><span>Wi-Fi</span><span class="status-value offline" id="wifiStatus">Desconectado</span></div>
+                        <div class="status-item"><span>Sensor Temp.</span><span class="status-value offline" id="sensorTempStatusCard">Desconectado</span></div>
+                        <div class="status-item"><span>Sensor Ar</span><span class="status-value offline" id="sensorHumStatusCard">Desconectado</span></div>
+                        <div class="status-item"><span>Sensor Solo</span><span class="status-value offline" id="sensorSoilStatusCard">Desconectado</span></div>
+                        <div class="status-item"><span>Motor</span><span class="status-value offline" id="motorStatusDisplay">Desconectado</span></div>
+                    </div>
+                    <div class="alerts-card">
+                        <h3>Alertas Recentes</h3>
+                        <div id="alertasLista"><div class="alert-item"><div class="alert-icon warning"><i class="fas fa-info-circle"></i></div><div>Aguardando conexão dos sensores</div><small>---</small></div></div>
+                    </div>
+                </div>
+
+                <div class="control-card">
+                    <h3>Controle de Irrigação</h3>
+                    <div class="control-buttons">
+                        <button class="btn-control on" onclick="controlarMotor('on')" disabled><i class="fas fa-play"></i> Ligar</button>
+                        <button class="btn-control off" onclick="controlarMotor('off')" disabled><i class="fas fa-stop"></i> Desligar</button>
+                        <button class="btn-control auto" onclick="controlarMotor('auto')" disabled><i class="fas fa-sync"></i> Auto</button>
+                    </div>
+                    <div style="background: var(--gray-100); padding: 15px; border-radius: 12px; text-align: center;" id="motorStatusBar"><i class="fas fa-motor"></i> Sistema aguardando conexão</div>
+                </div>
+            </div>
+
+            <!-- PÁGINA GRÁFICOS -->
+            <div id="page-graficos" class="page">
+                <div class="chart-card"><h3>Temperatura</h3><div class="chart-container"><canvas id="tempChart"></canvas></div><div id="previsaoTemp" style="margin-top: 10px; text-align: center;"></div></div>
+                <div class="chart-card"><h3>Humidade do Ar</h3><div class="chart-container"><canvas id="humChart"></canvas></div></div>
+                <div class="chart-card"><h3>Humidade do Solo</h3><div class="chart-container"><canvas id="soilChart"></canvas></div><div id="previsaoSolo" style="margin-top: 10px; text-align: center;"></div></div>
+            </div>
+
+            <!-- PÁGINA DISPOSITIVOS -->
+            <div id="page-dispositivos" class="page">
+                <div id="map"></div>
+                <div class="status-card"><h3>ESP32</h3><div class="status-item"><span>Status:</span><span class="status-value offline" id="espStatus2">Offline</span></div><div class="status-item"><span>IP:</span><span id="espIP">---.---.---.---</span></div><div class="status-item"><span>WiFi:</span><span class="status-value offline" id="wifiStatus2">Desconectado</span></div><div class="status-item"><span>Última comunicação:</span><span id="ultimaComunicacao">---</span></div></div>
+                <div class="status-card"><h3>Sensores</h3><div class="status-item"><span>🌡️ Temperatura:</span><span class="status-value offline" id="sensorTempStatus">Desconectado</span></div><div class="status-item"><span>💧 Humidade Ar:</span><span class="status-value offline" id="sensorHumStatus">Desconectado</span></div><div class="status-item"><span>🌱 Humidade Solo:</span><span class="status-value offline" id="sensorSoilStatus">Desconectado</span></div><div id="sensoresAdicionaisLista"></div></div>
+                <div class="status-card"><h3>Atuadores</h3><div class="status-item"><span>⚙️ Motor Irrigação:</span><span class="status-value offline" id="motorStatusDisplay2">Desconectado</span></div></div>
+            </div>
+
+            <!-- PÁGINA ALERTAS -->
+            <div id="page-alertas" class="page">
+                <div class="settings-section"><h3>Filtrar Alertas</h3><div style="display: flex; gap: 10px; flex-wrap: wrap;"><input type="date" id="filtroData" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-primary);"><select id="filtroAcao" style="flex:1; padding:10px; border-radius:8px; border:1px solid var(--border-color); background:var(--card-bg); color:var(--text-primary);"><option value="">Todos</option><option value="motor">Motor</option><option value="config">Configurações</option><option value="alerta">Alertas</option></select><button class="btn-settings" onclick="carregarLogs()">Filtrar</button><button class="btn-settings" onclick="limparFiltros()">Limpar</button></div></div>
+                <div class="alerts-card"><h3>Histórico de Eventos</h3><div id="logsLista" style="max-height: 500px; overflow-y: auto;"><div class="alert-item"><div class="alert-icon warning"><i class="fas fa-clock"></i></div><div>Sistema aguardando dados</div><small>Agora</small></div></div></div>
+            </div>
+
+            <!-- PÁGINA CONFIGURAÇÕES -->
+            <div id="page-configuracoes" class="page">
+                <div class="settings-section"><h3><i class="fas fa-sliders-h"></i> Configurações Gerais</h3><div class="setting-item"><div class="setting-info"><strong>Modo Escuro</strong><small>Alternar tema do painel</small></div><div class="toggle-switch" id="darkModeToggle" onclick="toggleDarkMode()"><div class="toggle-slider"></div></div></div><div class="setting-item"><div class="setting-info"><strong>Notificações Push</strong><small>Alertas em tempo real</small></div><div class="toggle-switch active" onclick="this.classList.toggle('active'); requestNotificationPermission()"><div class="toggle-slider"></div></div></div></div>
+                <div class="settings-section"><h3><i class="fas fa-microchip"></i> Sensores Conectados</h3><div id="sensores-lista"><div class="setting-item"><div class="setting-info"><strong><i class="fas fa-thermometer-half"></i> Temperatura (DHT11)</strong><small>GPIO 4 · Aguardando</small></div><span class="status-value waiting" id="configTempStatus">Aguardando</span></div><div class="setting-item"><div class="setting-info"><strong><i class="fas fa-tint"></i> Humidade Ar (DHT11)</strong><small>GPIO 4 · Aguardando</small></div><span class="status-value waiting" id="configHumStatus">Aguardando</span></div><div class="setting-item"><div class="setting-info"><strong><i class="fas fa-seedling"></i> Humidade Solo</strong><small>GPIO 34 · Aguardando</small></div><span class="status-value waiting" id="configSoilStatus">Aguardando</span></div></div><button class="btn-add-sensor" onclick="mostrarFormSensor()"><i class="fas fa-plus-circle"></i> Adicionar Novo Sensor</button><div id="novoSensorForm" style="display: none; margin-top: 20px; padding: 20px; background: var(--gray-100); border-radius: 16px;"><h4>Configurar Novo Sensor</h4><div style="margin-bottom:15px;"><label>Tipo</label><select id="tipoSensor" style="width:100%; padding:10px; border-radius:8px;"><option value="temperatura">🌡️ Temperatura</option><option value="humidade">💧 Humidade</option><option value="solo">🌱 Solo</option></select></div><div style="margin-bottom:15px;"><label>Nome</label><input type="text" id="nomeSensor" placeholder="Ex: Sensor Sul" style="width:100%; padding:10px; border-radius:8px;"></div><div style="margin-bottom:15px;"><label>GPIO</label><input type="number" id="gpioSensor" placeholder="Ex: 32" style="width:100%; padding:10px; border-radius:8px;"></div><div style="margin-bottom:15px;"><label>Unidade</label><input type="text" id="unidadeSensor" value="%" style="width:100%; padding:10px; border-radius:8px;"></div><div style="display:flex; gap:10px;"><button class="btn-settings" onclick="adicionarSensor()" style="flex:1">Adicionar</button><button class="btn-settings" onclick="cancelarAdicionarSensor()" style="flex:1; background:var(--gray-500);">Cancelar</button></div></div></div>
+                <div class="settings-section"><h3><i class="fas fa-water"></i> Irrigação</h3><div class="setting-item"><div class="setting-info"><strong>Modo Automático</strong><small>Irrigação baseada em regras</small></div><div class="toggle-switch" id="autoModeToggle" onclick="toggleAutoMode()"><div class="toggle-slider"></div></div></div><div class="setting-item"><div class="setting-info"><strong>Limite Seco</strong><small>Ligar quando solo &lt; %</small></div><input type="number" id="limiteSeco" value="30" style="width:80px; padding:8px; border-radius:8px;"></div><div class="setting-item"><div class="setting-info"><strong>Limite Úmido</strong><small>Desligar quando solo &gt; %</small></div><input type="number" id="limiteUmido" value="60" style="width:80px; padding:8px; border-radius:8px;"></div><div class="setting-item"><div class="setting-info"><strong>Histerese</strong><small>Desliga quando solo &gt; (Limite Úmido - 5%)</small></div><span style="color: var(--text-secondary);">Desliga em: <span id="histereseDisplay">55</span>%</span></div></div>
+                <div class="settings-section"><h3><i class="fas fa-save"></i> Backup</h3><div class="setting-item"><div class="setting-info"><strong>Exportar dados</strong><small>Baixar CSV</small></div><button class="btn-settings" onclick="exportarDados()">Exportar</button></div><div class="setting-item"><div class="setting-info"><strong>Backup sistema</strong><small>Salvar configurações</small></div><button class="btn-settings" onclick="fazerBackup()">Backup</button></div></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="loading-overlay">
+        <div class="loading-card">
+            <i class="fas fa-spinner fa-pulse fa-3x" style="color: var(--primary);"></i>
+            <p style="margin-top: 15px;">Carregando dados do sistema...</p>
+        </div>
+    </div>
+
+    <!-- Scripts Externos -->
+    <script src="js/script.js"></script>
+</body>
+</html>
+</body>
+</html>
