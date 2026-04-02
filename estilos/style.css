@@ -99,7 +99,7 @@ body {
 
 /* Logo na tela de login (aumentada) */
 .login-logo .logo-img {
-    width: 220px;
+    width: 320px;
     height: 220px;
     margin: 0 auto 25px auto;
 }
@@ -195,11 +195,14 @@ body {
     border: 2px solid var(--gray-200);
     border-radius: 12px;
     font-size: 16px;
+    background-color: #f0f7f4;
+    color: var(--text-primary);
 }
 
 .form-group input:focus {
     outline: none;
     border-color: var(--accent);
+    background-color: #e8f4f0;
 }
 
 /* Botão de login */
