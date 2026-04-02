@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=yes">
     <title>Green Agro Commodities - Sistema de Irrigação Inteligente</title>
+    <link rel="stylesheet" href="estilos/style.css">
     
     <!-- Bibliotecas CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -20,10 +21,11 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- Estilos Externos -->
-    <link rel="stylesheet" href="estilos/styles.css">
+    
+
 </head>
 <body>
+    <button class="menu-toggle" onclick="toggleSidebar()"><i class="fas fa-bars"></i></button>
     <div class="sidebar-overlay" onclick="toggleSidebar()"></div>
 
     <!-- TELA DE LOGIN -->
@@ -35,19 +37,8 @@
                 <h1>GREEN AGRO COMMODITIES, LIMITADA</h1>
                 <p>Garantia de Produtos de Primeira Qualidade</p>
             </div>
-            <div class="form-group">
-                <label><i class="fas fa-user"></i> Nome do Usuário</label>
-                <input type="text" id="username" value="admin">
-            </div>
-            <div class="form-group">
-                <label><i class="fas fa-lock"></i> Código de Acesso</label>
-                <div class="password-container">
-                    <input type="password" id="access-code" value="1234">
-                    <button type="button" class="password-toggle" onclick="togglePasswordVisibility()">
-                        <i id="passwordToggleIcon" class="fas fa-eye"></i>
-                    </button>
-                </div>
-            </div>
+            <div class="form-group"><label><i class="fas fa-user"></i> Nome do Usuário</label><input type="text" id="username" value="admin"></div>
+            <div class="form-group"><label><i class="fas fa-lock"></i> Código de Acesso</label><input type="password" id="access-code" value="1234"><small style="color: gray; display: block; margin-top: 5px;">Código: 1234</small></div>
             <button class="btn-login" onclick="fazerLogin()"><i class="fas fa-sign-in-alt"></i> Entrar</button>
         </div>
     </div>
@@ -157,9 +148,6 @@
         </div>
     </div>
 
-    <!-- Scripts Externos -->
-    <script src="js/script.js"></script>
-</body>
-</html>
+    <script src="scripts/app.js"></script>
 </body>
 </html>

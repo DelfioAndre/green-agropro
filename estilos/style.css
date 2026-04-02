@@ -1,0 +1,979 @@
+/* ========================================
+   ESTILOS GLOBAIS DO GREEN AGROPRO
+   ======================================== */
+
+@charset "UTF-8";
+
+/* ========================================
+   1. RESET E ESTILOS BASE
+   ======================================== */
+
+/* Reset global: remove margens e paddings padrão */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* ========================================
+   2. VARIÁVEIS CSS (TEMA CLARO)
+   ======================================== */
+
+:root {
+    /* Cores Primárias - Verde para Agropro */
+    --primary-dark: #1a4d3e;
+    --primary: #2b5a4c;
+    --primary-light: #3a7b63;
+    --accent: #6cd4b3;
+
+    /* Cores de Estado */
+    --success: #10b981;
+    --warning: #f59e0b;
+    --danger: #ef4444;
+
+    /* Escala de Cinza */
+    --gray-50: #f9fafb;
+    --gray-100: #f3f4f6;
+    --gray-200: #e5e7eb;
+    --gray-300: #d1d5db;
+    --gray-400: #9ca3af;
+    --gray-500: #6b7280;
+    --gray-600: #4b5563;
+    --gray-700: #374151;
+    --gray-800: #1f2937;
+
+    /* Cores de Fundo e Texto */
+    --bg-primary: #ffffff;
+    --bg-secondary: #f9fafb;
+    --text-primary: #1f2937;
+    --text-secondary: #4b5563;
+
+    /* Componentes Específicos */
+    --card-bg: #ffffff;
+    --border-color: #e5e7eb;
+    --sidebar-width: 280px;
+
+    /* Transições Globais */
+    transition: background-color 0.3s, color 0.3s;
+}
+
+/* ========================================
+   3. TEMA ESCURO
+   ======================================== */
+
+/* Sobrescreve as variáveis para o modo escuro */
+[data-theme="dark"] {
+    --bg-primary: #1a1a1a;
+    --bg-secondary: #2d2d2d;
+    --text-primary: #ffffff;
+    --text-secondary: #cccccc;
+    --card-bg: #2d2d2d;
+    --border-color: #404040;
+}
+
+/* ========================================
+   4. ESTILOS DO BODY
+   ======================================== */
+
+/* Estilo principal da página com gradiente */
+body {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    min-height: 100vh;
+    overflow: hidden;
+}
+
+
+/* ========================================
+   5. LOGO - ESTILOS COMPARTILHADOS
+   ======================================== */
+
+/* Logo principal na tela de login */
+.logo-img {
+    width: 90px;
+    height: 90px;
+    margin: 0 auto 10px auto;
+    display: block;
+    object-fit: contain;
+}
+
+/* Logo menor na sidebar */
+.sidebar-logo .logo-img {
+    width: 65px;
+    height: 65px;
+    margin-bottom: 10px;
+}
+
+/* ========================================
+   6. TELA DE LOGIN
+   ======================================== */
+
+/* Contenedor principal da tela de login */
+#login-screen {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.3s;
+    padding: 20px;
+}
+
+/* Oculta a tela de login quando o usuário faz login */
+#login-screen.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Card do formulário de login */
+.login-card {
+    background: white;
+    border-radius: 30px;
+    padding: 40px 30px;
+    width: 100%;
+    max-width: 450px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    animation: slideIn 0.5s;
+}
+
+/* Animação de entrada do card */
+@keyframes slideIn {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Container da logo e título no login */
+.login-logo {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.login-logo h1 {
+    font-size: clamp(20px, 5vw, 26px);
+    color: var(--primary-dark);
+    margin-bottom: 8px;
+}
+
+.login-logo p {
+    color: var(--gray-500);
+    font-size: clamp(11px, 3vw, 13px);
+}
+
+/* Grupo de formulário (input + label) */
+.form-group {
+    margin-bottom: 25px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--gray-700);
+    font-weight: 500;
+}
+
+.form-group input {
+    width: 100%;
+    padding: 14px 16px;
+    border: 2px solid var(--gray-200);
+    border-radius: 12px;
+    font-size: 16px;
+}
+
+.form-group input:focus {
+    outline: none;
+    border-color: var(--accent);
+}
+
+/* Botão de login */
+.btn-login {
+    width: 100%;
+    padding: 16px;
+    background: var(--primary);
+    border: none;
+    border-radius: 12px;
+    color: white;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: 0.3s;
+}
+
+.btn-login:hover {
+    background: var(--primary-light);
+    transform: translateY(-2px);
+}
+
+/* ========================================
+   7. DASHBOARD - LAYOUT PRINCIPAL
+   ======================================== */
+
+/* Container principal do dashboard */
+#dashboard-screen {
+    display: none;
+    width: 100%;
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Quando o dashboard está visível */
+#dashboard-screen.visible {
+    display: flex;
+}
+
+
+/* ========================================
+   8. SIDEBAR - NAVEGAÇÃO
+   ======================================== */
+
+/* Container da sidebar */
+.sidebar {
+    width: var(--sidebar-width);
+    background: linear-gradient(180deg, var(--primary-dark) 0%, var(--primary) 100%);
+    color: white;
+    display: flex;
+    flex-direction: column;
+    padding: 30px 20px;
+    position: relative;
+    z-index: 100;
+}
+
+/* Header da sidebar com logo e título */
+.sidebar-logo {
+    text-align: center;
+    margin-bottom: 40px;
+}
+
+.sidebar-logo h2 {
+    font-size: clamp(16px, 4vw, 20px);
+    margin-bottom: 5px;
+}
+
+.sidebar-logo p {
+    font-size: 10px;
+    opacity: 0.9;
+}
+
+/* Container de navegação */
+.sidebar-nav {
+    flex: 1;
+}
+
+/* Items do menu de navegação */
+.nav-item {
+    list-style: none;
+    margin-bottom: 5px;
+    border-radius: 12px;
+    cursor: pointer;
+}
+
+/* Item de navegação ativo/selecionado */
+.nav-item.active {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+/* Links e ícones da navegação */
+.nav-item a {
+    display: flex;
+    align-items: center;
+    padding: 15px 20px;
+    color: white;
+    text-decoration: none;
+    gap: 15px;
+}
+
+.nav-item i {
+    width: 24px;
+    font-size: 20px;
+}
+
+/* Seção do usuário na parte inferior da sidebar */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 20px 0;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-info i {
+    font-size: 32px;
+}
+
+/* Botão de logout */
+.btn-logout {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: white;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Botão de menu (para mobile) */
+.menu-toggle {
+    display: none;
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: var(--primary);
+    color: white;
+    border: none;
+    width: 50px;
+    height: 50px;
+    border-radius: 12px;
+    font-size: 24px;
+    cursor: pointer;
+}
+
+/* ========================================
+   9. CONTEÚDO PRINCIPAL
+   ======================================== */
+
+/* Container principal de conteúdo */
+.main-content {
+    flex: 1;
+    background: var(--bg-secondary);
+    overflow-y: auto;
+    padding: 30px;
+}
+
+/* Header do conteúdo (título e data/hora) */
+.content-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--card-bg);
+    padding: 20px 30px;
+    border-radius: 20px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+/* Título da página */
+.page-title h1 {
+    color: var(--text-primary);
+    font-size: clamp(20px, 4vw, 28px);
+}
+
+.page-title p {
+    color: var(--text-secondary);
+    font-size: clamp(12px, 3vw, 14px);
+}
+
+/* Data e hora no header */
+.header-datetime {
+    display: flex;
+    gap: 15px;
+    color: var(--text-secondary);
+    font-size: clamp(12px, 3vw, 14px);
+}
+
+/* Container de páginas (para múltiplas telas) */
+.page {
+    display: none;
+}
+
+.page.active {
+    display: block;
+}
+
+/* ========================================
+   10. GRID DE SENSORES (CARDS PRINCIPAIS)
+   ======================================== */
+
+/* Grid responsivo para sensores */
+.sensors-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* Card individual de sensor */
+.sensor-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 25px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+}
+
+/* Header do card (ícone + título) */
+.card-header {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+/* Ícone do sensor */
+.card-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 28px;
+    color: white;
+    flex-shrink: 0;
+}
+
+/* Estilos de ícones por tipo de sensor */
+.card-icon.temperature {
+    background: linear-gradient(135deg, #ff6b6b, #ff8e8e);
+}
+
+.card-icon.humidity {
+    background: linear-gradient(135deg, #4a90e2, #6cace4);
+}
+
+.card-icon.soil {
+    background: linear-gradient(135deg, #2ecc71, #27ae60);
+}
+
+/* Valor do sensor exibido em grande */
+.sensor-value {
+    font-size: clamp(32px, 6vw, 48px);
+    font-weight: 700;
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+/* Barra de progresso */
+.progress-bar {
+    height: 8px;
+    background: var(--gray-200);
+    border-radius: 4px;
+    overflow: hidden;
+    margin: 10px 0;
+}
+
+/* Preenchimento da barra de progresso */
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--accent), var(--primary));
+    transition: width 0.3s;
+}
+
+/* Status do sensor (online/offline/warning) */
+.sensor-status {
+    display: inline-block;
+    padding: 4px 12px;
+    border-radius: 50px;
+    font-size: 13px;
+    margin-top: 10px;
+}
+
+.status-offline {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status-good {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+.status-warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+
+/* ========================================
+   11. GRÁFICOS
+   ======================================== */
+
+/* Container para gráficos */
+.chart-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 25px;
+    margin-bottom: 30px;
+    border: 1px solid var(--border-color);
+}
+
+.chart-card h3 {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+}
+
+/* Área onde o gráfico é renderizado */
+.chart-container {
+    height: 300px;
+    position: relative;
+}
+
+/* Ajusta altura em dispositivos menores */
+@media (max-width: 768px) {
+    .chart-container {
+        height: 250px;
+    }
+}
+
+/* ========================================
+   12. GRID DASHBOARD - CARDS SECUNDÁRIOS
+   ======================================== */
+
+/* Grid para status, alertas e controles */
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 25px;
+    margin-bottom: 30px;
+}
+
+/* Responsivo: uma coluna em tablets */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ========================================
+   13. CARDS DE STATUS, ALERTAS E CONTROLES
+   ======================================== */
+
+/* Cards do dashboard */
+.status-card,
+.alerts-card,
+.control-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 25px;
+    border: 1px solid var(--border-color);
+}
+
+/* Item de status individual */
+.status-item {
+    display: flex;
+    justify-content: space-between;
+    padding: 12px 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-secondary);
+}
+
+.status-item:last-child {
+    border-bottom: none;
+}
+
+/* Valor do status */
+.status-value {
+    font-weight: 600;
+}
+
+.status-value.online {
+    color: var(--success);
+}
+
+.status-value.offline {
+    color: var(--danger);
+}
+
+/* ========================================
+   14. ALERTAS
+   ======================================== */
+
+/* Item individual de alerta */
+.alert-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    flex-wrap: wrap;
+}
+
+/* Ícone do alerta */
+.alert-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.alert-icon.warning {
+    background: #fef3c7;
+    color: #92400e;
+}
+
+.alert-icon.success {
+    background: #d1fae5;
+    color: #065f46;
+}
+
+/* ========================================
+   15. BOTÕES DE CONTROLE
+   ======================================== */
+
+/* Grid de botões de controle */
+.control-buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 15px;
+    margin: 20px 0;
+}
+
+/* Botão de controle individual */
+.btn-control {
+    padding: 15px;
+    border: none;
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    background: var(--gray-100);
+    color: var(--text-primary);
+    transition: all 0.3s;
+}
+
+.btn-control i {
+    font-size: 24px;
+}
+
+/* Estados ativo dos botões */
+.btn-control.on.active {
+    background: var(--success);
+    color: white;
+}
+
+.btn-control.off.active {
+    background: var(--danger);
+    color: white;
+}
+
+.btn-control.auto.active {
+    background: var(--primary);
+    color: white;
+}
+
+/* Responsivo para botões de controle */
+@media (max-width: 480px) {
+    .control-buttons {
+        grid-template-columns: 1fr;
+    }
+    .btn-control {
+        flex-direction: row;
+        justify-content: center;
+    }
+}
+
+/* ========================================
+   16. CONFIGURAÇÕES
+   ======================================== */
+
+/* Seção de configurações */
+.settings-section {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 25px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+}
+
+/* Item individual de configuração */
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid var(--border-color);
+    color: var(--text-primary);
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+/* Switch de toggle (ativar/desativar) */
+.toggle-switch {
+    width: 52px;
+    height: 26px;
+    background: var(--gray-300);
+    border-radius: 26px;
+    position: relative;
+    cursor: pointer;
+}
+
+.toggle-switch.active {
+    background: var(--success);
+}
+
+/* Slider dentro do toggle */
+.toggle-slider {
+    width: 22px;
+    height: 22px;
+    background: white;
+    border-radius: 50%;
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    transition: 0.3s;
+}
+
+.toggle-switch.active .toggle-slider {
+    transform: translateX(26px);
+}
+
+/* Botão de configurações */
+.btn-settings {
+    padding: 10px 20px;
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+}
+
+/* Botão para adicionar novo sensor */
+.btn-add-sensor {
+    width: 100%;
+    padding: 15px;
+    background: var(--gray-100);
+    border: 2px dashed var(--gray-400);
+    border-radius: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+
+/* ========================================
+   17. MAPA
+   ======================================== */
+
+/* Mapa interativo */
+#map {
+    height: 400px;
+    width: 100%;
+    border-radius: 24px;
+    margin-bottom: 20px;
+}
+
+/* ========================================
+   18. RECURSO DE VOZ
+   ======================================== */
+
+/* Botão de comando de voz */
+.voice-btn {
+    background: var(--primary);
+    color: white;
+    border: none;
+    border-radius: 50px;
+    padding: 12px 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+}
+
+/* Estado de escuta ativa */
+.voice-btn.listening {
+    background: var(--danger);
+    animation: pulse 1s infinite;
+}
+
+/* Animação de pulso para o estado escutando */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.05);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+/* ========================================
+   19. CLIMA/PREVISÃO
+   ======================================== */
+
+/* Card de previsão do tempo */
+.weather-card {
+    background: var(--card-bg);
+    border-radius: 24px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Alerta de chuva */
+.rain-alert {
+    background: #fef3c7;
+    border-left: 4px solid var(--warning);
+    padding: 10px 15px;
+    border-radius: 12px;
+    margin-bottom: 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: #92400e;
+}
+
+/* ========================================
+   20. OVERLAY DE CARREGAMENTO
+   ======================================== */
+
+/* Sobreposição durante o carregamento */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+}
+
+/* Card de carregamento */
+.loading-card {
+    background: white;
+    padding: 30px;
+    border-radius: 24px;
+    text-align: center;
+}
+
+/* ========================================
+   21. NOTIFICAÇÕES TOAST
+   ======================================== */
+
+/* Notificação toast (mensagens flutuantes) */
+.toast-notification {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #323232;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    z-index: 10000;
+    animation: slideUp 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Variações de cor para toast */
+.toast-notification.warning {
+    background: #f59e0b;
+}
+
+.toast-notification.error {
+    background: #ef4444;
+}
+
+.toast-notification.success {
+    background: #10b981;
+}
+
+/* Animação de entrada do toast */
+@keyframes slideUp {
+    from {
+        transform: translateY(100px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* ========================================
+   22. RESPONSIVIDADE - MOBILE E TABLET
+   ======================================== */
+
+@media (max-width: 768px) {
+    /* Exibe o botão de menu em mobile */
+    .menu-toggle {
+        display: block;
+    }
+
+    /* Sidebar fica fora da tela e desliza */
+    .sidebar {
+        position: fixed;
+        left: -280px;
+        top: 0;
+        bottom: 0;
+        transition: left 0.3s;
+    }
+
+    /* Sidebar aberta */
+    .sidebar.open {
+        left: 0;
+    }
+
+    /* Ajusta padding do conteúdo principal */
+    .main-content {
+        padding: 70px 15px 15px 15px;
+    }
+
+    /* Header ajustado */
+    .content-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    /* Grid de sensores em uma coluna */
+    .sensors-grid {
+        grid-template-columns: 1fr;
+    }
+
+    /* Overlay para quando a sidebar está aberta */
+    .sidebar-overlay {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 99;
+    }
+
+    .sidebar-overlay.active {
+        display: block;
+    }
+}
