@@ -97,6 +97,13 @@ body {
     object-fit: contain;
 }
 
+/* Logo na tela de login (aumentada) */
+.login-logo .logo-img {
+    width: 150px;
+    height: 150px;
+    margin: 0 auto 20px auto;
+}
+
 /* Logo menor na sidebar */
 .sidebar-logo .logo-img {
     width: 65px;
