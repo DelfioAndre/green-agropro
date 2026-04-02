@@ -99,9 +99,9 @@ body {
 
 /* Logo na tela de login (aumentada) */
 .login-logo .logo-img {
-    width: 150px;
-    height: 150px;
-    margin: 0 auto 20px auto;
+    width: 220px;
+    height: 220px;
+    margin: 0 auto 25px auto;
 }
 
 /* Logo menor na sidebar */
