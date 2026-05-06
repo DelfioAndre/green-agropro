@@ -243,7 +243,7 @@ function controlarMotor(comando) {
         registrarLog('motor', 'Motor ligado manualmente');
         if (database) database.ref('comandos/motor').set({ estado: 'on', timestamp: Date.now() });
         setTimeout(() => {
-            if (motorEstado === 'on' && document.getElementById('motorStatusDisplay').textContent === 'Ligado') {
+            if (motorEstado === 'on' && document.getElementById('motorStatusDisplay').textContent.includes('Ligado')) {
                 controlarMotor('off');
                 showToast('⏱️ Motor desligado automaticamente após 2 minutos!', 'info');
                 addAlert('⏱️ Motor desligado automaticamente (tempo máximo de 2 minutos)', 'warning');
@@ -360,7 +360,7 @@ function atualizarDadosFirebase(dados) {
                 const limiteSeco = parseInt(document.getElementById('limiteSeco')?.value || 30);
                 const limiteUmido = parseInt(document.getElementById('limiteUmido')?.value || 60);
                 const limiteDesligar = limiteUmido - HYSTERESIS_OFFSET;
-                const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent === 'Ligado';
+                const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent.includes('Ligado');
                 
                 if (solo < limiteSeco && !motorLigadoAtual) {
                     motorEstado = 'on';
