@@ -381,20 +381,18 @@ function atualizarDadosFirebase(dados) {
             
             // 🤖 Lógica de automação - SÓ DECIDE LIGAR/DESLIGAR
             if (autoMode) {
+                // Regra solicitada: ligar se solo < limiteSeco (padrão 30%),
+                // desligar caso contrário (>= limiteSeco)
                 const limiteSeco = parseInt(document.getElementById('limiteSeco')?.value || 30);
-                const limiteUmido = parseInt(document.getElementById('limiteUmido')?.value || 60);
-                const limiteDesligar = limiteUmido - HYSTERESIS_OFFSET;
                 const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent.includes('Ligado');
-                
+
                 // Solo seco: DECIDIR ligar motor (se ainda não está ligado)
                 if (solo < limiteSeco && !motorLigadoAtual && ultimoComandoAuto !== 'on') {
-                    // Envia comando para ligar
                     acionarMotorAutomatico('on');
                     ultimoComandoAuto = 'on';
                 }
-                // Solo úmido: DECIDIR desligar motor (se ainda não está desligado)
-                else if (solo > limiteDesligar && motorLigadoAtual && ultimoComandoAuto !== 'off') {
-                    // Envia comando para desligar
+                // Solo >= limiteSeco: DECIDIR desligar motor (se ainda não está desligado)
+                else if (solo >= limiteSeco && motorLigadoAtual && ultimoComandoAuto !== 'off') {
                     acionarMotorAutomatico('off');
                     ultimoComandoAuto = 'off';
                 }
