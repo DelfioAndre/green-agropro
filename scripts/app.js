@@ -40,9 +40,11 @@ let database, messaging;
 let usuarioAtual = '';
 
 // 🏃 Motor e Automação
-let motorEstado = 'off';              // Estado: 'on' | 'off'
+let motorEstado = 'off';              // Estado local: 'on' | 'off'
 let autoMode = false;                 // Modo automático ativo?
 let motorStartTime = 0;               // Timestamp de início do motor
+let ultimoComandoAuto = null;         // Último comando automático enviado
+let timeoutAutoDesliga = null;        // ID do timeout de auto-desligamento
 
 // 📊 Sensores
 let lastUpdateTime = 0;               // Última vez que dados foram recebidos
@@ -377,75 +379,51 @@ function atualizarDadosFirebase(dados) {
                 }
             });
             
-            // 🤖 Lógica de automação
+            // 🤖 Lógica de automação - SÓ DECIDE LIGAR/DESLIGAR
             if (autoMode) {
                 const limiteSeco = parseInt(document.getElementById('limiteSeco')?.value || 30);
                 const limiteUmido = parseInt(document.getElementById('limiteUmido')?.value || 60);
                 const limiteDesligar = limiteUmido - HYSTERESIS_OFFSET;
                 const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent.includes('Ligado');
                 
-                // Solo seco: ligar motor
-                if (solo < limiteSeco && !motorLigadoAtual) {
-                    motorEstado = 'on';
-                    motorStartTime = Date.now();
-                    document.getElementById('motorStatusDisplay').textContent = 'Ligado (Auto)';
-                    document.getElementById('motorStatusDisplay').className = 'status-value online';
-                    document.getElementById('motorStatusDisplay2').textContent = 'Ligado (Auto)';
-                    document.getElementById('motorStatusDisplay2').className = 'status-value online';
-                    document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-play-circle"></i> Motor LIGADO (Automático)';
-                    document.getElementById('motorStatusBar').style.background = '#d1fae5';
-                    addAlert('💧 Solo seco! Irrigação automática ligada', 'warning');
-                    registrarLog('motor', 'Irrigação automática LIGADA - Solo seco: ' + solo + '%');
-                    if (database) database.ref('comandos/motor').set({ estado: 'on', timestamp: Date.now() });
-                    
-                    // Desliga após 2 minutos
-                    setTimeout(() => {
-                        if (autoMode && document.getElementById('motorStatusDisplay').textContent.includes('Ligado')) {
-                            motorEstado = 'off';
-                            document.getElementById('motorStatusDisplay').textContent = 'Desligado (Auto)';
-                            document.getElementById('motorStatusDisplay').className = 'status-value offline';
-                            document.getElementById('motorStatusDisplay2').textContent = 'Desligado (Auto)';
-                            document.getElementById('motorStatusDisplay2').className = 'status-value offline';
-                            document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-stop-circle"></i> Motor DESLIGADO (Automático)';
-                            document.getElementById('motorStatusBar').style.background = '#fee2e2';
-                            addAlert('⏱️ Motor desligado automaticamente após 2 minutos (Auto)', 'info');
-                            if (database) database.ref('comandos/motor').set({ estado: 'off', timestamp: Date.now() });
-                        }
-                    }, MOTOR_MAX_TIME);
+                // Solo seco: DECIDIR ligar motor (se ainda não está ligado)
+                if (solo < limiteSeco && !motorLigadoAtual && ultimoComandoAuto !== 'on') {
+                    // Envia comando para ligar
+                    acionarMotorAutomatico('on');
+                    ultimoComandoAuto = 'on';
                 }
-                // Solo úmido: desligar motor
-                else if (solo > limiteDesligar && motorLigadoAtual) {
-                    motorEstado = 'off';
-                    motorStartTime = 0;
-                    document.getElementById('motorStatusDisplay').textContent = 'Desligado (Auto)';
-                    document.getElementById('motorStatusDisplay').className = 'status-value offline';
-                    document.getElementById('motorStatusDisplay2').textContent = 'Desligado (Auto)';
-                    document.getElementById('motorStatusDisplay2').className = 'status-value offline';
-                    document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-stop-circle"></i> Motor DESLIGADO (Automático)';
-                    document.getElementById('motorStatusBar').style.background = '#fee2e2';
-                    addAlert('✅ Solo úmido! Irrigação automática desligada', 'success');
-                    registrarLog('motor', 'Irrigação automática DESLIGADA - Solo úmido: ' + solo + '%');
-                    if (database) database.ref('comandos/motor').set({ estado: 'off', timestamp: Date.now() });
+                // Solo úmido: DECIDIR desligar motor (se ainda não está desligado)
+                else if (solo > limiteDesligar && motorLigadoAtual && ultimoComandoAuto !== 'off') {
+                    // Envia comando para desligar
+                    acionarMotorAutomatico('off');
+                    ultimoComandoAuto = 'off';
                 }
             }
         }
     }
 
-    // Atualiza UI de modo automático
-    if (autoMode) {
-        document.querySelector('.btn-control.on').disabled = true;
-        document.querySelector('.btn-control.off').disabled = true;
-        document.querySelector('.btn-control.on').style.opacity = '0.5';
-        document.querySelector('.btn-control.off').style.opacity = '0.5';
-        document.querySelector('.btn-control.auto').classList.add('active');
-        document.getElementById('autoModeToggle').classList.add('active');
-    } else {
-        document.querySelector('.btn-control.on').disabled = false;
-        document.querySelector('.btn-control.off').disabled = false;
-        document.querySelector('.btn-control.on').style.opacity = '1';
-        document.querySelector('.btn-control.off').style.opacity = '1';
-        document.querySelector('.btn-control.auto').classList.remove('active');
-        document.getElementById('autoModeToggle').classList.remove('active');
+    // Atualiza UI dos botões conforme modo
+    const btnOn = document.querySelector('.btn-control.on');
+    const btnOff = document.querySelector('.btn-control.off');
+    const btnAuto = document.querySelector('.btn-control.auto');
+    const toggleAuto = document.getElementById('autoModeToggle');
+    
+    if (btnOn && btnOff && btnAuto && toggleAuto) {
+        if (autoMode) {
+            btnOn.disabled = true;
+            btnOff.disabled = true;
+            btnOn.style.opacity = '0.5';
+            btnOff.style.opacity = '0.5';
+            btnAuto.classList.add('active');
+            toggleAuto.classList.add('active');
+        } else {
+            btnOn.disabled = false;
+            btnOff.disabled = false;
+            btnOn.style.opacity = '1';
+            btnOff.style.opacity = '1';
+            btnAuto.classList.remove('active');
+            toggleAuto.classList.remove('active');
+        }
     }
 
     // Atualiza status ESP32
@@ -476,7 +454,7 @@ function atualizarDadosFirebase(dados) {
 // ============================================================
 
 /**
- * Controla o motor de irrigação
+ * Controla o motor (CONTROLE MANUAL)
  * @param {string} comando - 'on' (ligar), 'off' (desligar), 'auto' (automático)
  */
 function controlarMotor(comando) {
@@ -486,76 +464,139 @@ function controlarMotor(comando) {
         return;
     }
 
-    // 🤖 Modo automático
+    // 🤖 Alternar para modo automático
     if (comando === 'auto') {
         autoMode = true;
-        document.getElementById('autoModeToggle').classList.add('active');
+        ultimoComandoAuto = null;  // Reseta para que automação avalie condições
         showToast('🤖 Modo automático ativado!', 'success');
-        document.querySelectorAll('.btn-control').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.btn-control.auto').classList.add('active');
-        document.querySelector('.btn-control.on').disabled = true;
-        document.querySelector('.btn-control.off').disabled = true;
-        document.querySelector('.btn-control.on').style.opacity = '0.5';
-        document.querySelector('.btn-control.off').style.opacity = '0.5';
-        if (database) database.ref('comandos/motor').set({ estado: 'auto', timestamp: Date.now() });
         addAlert('Modo automático ativado', 'success');
         registrarLog('motor', 'Modo automático ativado');
+        // Envia comando para microcontrolador
+        if (database) database.ref('comandos/motor').set({ modo: 'auto', timestamp: Date.now() });
         return;
     }
 
-    // 🟢 Ligar motor
+    // 🟢 Ligar motor MANUALMENTE
     if (comando === 'on') {
-        if (document.getElementById('motorStatusDisplay').textContent === 'Ligado') {
+        if (motorEstado === 'on') {
             showToast('⚠️ Motor já está ligado!', 'warning');
             return;
         }
+        // Limpar timeout anterior se existir
+        if (timeoutAutoDesliga) clearTimeout(timeoutAutoDesliga);
+        
         motorEstado = 'on';
         motorStartTime = Date.now();
-        document.getElementById('motorStatusDisplay').textContent = 'Ligado';
-        document.getElementById('motorStatusDisplay').className = 'status-value online';
-        document.getElementById('motorStatusDisplay2').textContent = 'Ligado';
-        document.getElementById('motorStatusDisplay2').className = 'status-value online';
-        document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-play-circle"></i> Motor LIGADO (Manual)';
-        document.getElementById('motorStatusBar').style.background = '#d1fae5';
-        document.querySelectorAll('.btn-control').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.btn-control.on').classList.add('active');
+        atualizarUIMotor('on', false);
+        showToast('🟢 Motor ligado manualmente', 'success');
         addAlert('Motor ligado manualmente', 'success');
         registrarLog('motor', 'Motor ligado manualmente');
-        if (database) database.ref('comandos/motor').set({ estado: 'on', timestamp: Date.now() });
         
-        // Auto-desliga após 2 minutos
-        setTimeout(() => {
-            if (motorEstado === 'on' && document.getElementById('motorStatusDisplay').textContent.includes('Ligado')) {
+        // Envia comando para microcontrolador
+        if (database) database.ref('comandos/motor').set({ estado: 'on', modo: 'manual', timestamp: Date.now() });
+        
+        // Auto-desliga após 2 minutos (apenas em modo manual)
+        timeoutAutoDesliga = setTimeout(() => {
+            if (motorEstado === 'on' && !autoMode) {
                 controlarMotor('off');
                 showToast('⏱️ Motor desligado automaticamente após 2 minutos!', 'info');
-                addAlert('⏱️ Motor desligado automaticamente (tempo máximo de 2 minutos)', 'warning');
+                addAlert('⏱️ Motor desligado automaticamente (limite de 2 minutos)', 'warning');
             }
         }, MOTOR_MAX_TIME);
     }
-    // 🔴 Desligar motor
+    // 🔴 Desligar motor MANUALMENTE
     else if (comando === 'off') {
-        if (document.getElementById('motorStatusDisplay').textContent === 'Desligado') {
+        if (motorEstado === 'off') {
             showToast('⚠️ Motor já está desligado!', 'warning');
             return;
         }
+        // Limpar timeout
+        if (timeoutAutoDesliga) clearTimeout(timeoutAutoDesliga);
+        
         motorEstado = 'off';
         motorStartTime = 0;
-        document.getElementById('motorStatusDisplay').textContent = 'Desligado';
-        document.getElementById('motorStatusDisplay').className = 'status-value offline';
-        document.getElementById('motorStatusDisplay2').textContent = 'Desligado';
-        document.getElementById('motorStatusDisplay2').className = 'status-value offline';
-        document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-stop-circle"></i> Motor DESLIGADO (Manual)';
-        document.getElementById('motorStatusBar').style.background = '#fee2e2';
-        document.querySelectorAll('.btn-control').forEach(btn => btn.classList.remove('active'));
-        document.querySelector('.btn-control.off').classList.add('active');
+        atualizarUIMotor('off', false);
+        showToast('🔴 Motor desligado manualmente', 'info');
         addAlert('Motor desligado manualmente', 'info');
         registrarLog('motor', 'Motor desligado manualmente');
-        if (database) database.ref('comandos/motor').set({ estado: 'off', timestamp: Date.now() });
+        
+        // Envia comando para microcontrolador
+        if (database) database.ref('comandos/motor').set({ estado: 'off', modo: 'manual', timestamp: Date.now() });
     }
 }
 
 /**
- * Alterna modo automático/manual
+ * Aciona motor em modo AUTOMÁTICO
+ * @param {string} comando - 'on' ou 'off'
+ */
+function acionarMotorAutomatico(comando) {
+    // Limpar timeout anterior se existir
+    if (timeoutAutoDesliga) clearTimeout(timeoutAutoDesliga);
+    
+    if (comando === 'on') {
+        motorEstado = 'on';
+        motorStartTime = Date.now();
+        atualizarUIMotor('on', true);
+        addAlert('💧 Solo seco! Irrigação automática ligada', 'warning');
+        registrarLog('motor', 'Automático: LIGADO por condição de solo seco');
+        
+        // Envia comando
+        if (database) database.ref('comandos/motor').set({ estado: 'on', modo: 'auto', timestamp: Date.now() });
+        
+        // Auto-desliga após 2 minutos (apenas em modo automático)
+        timeoutAutoDesliga = setTimeout(() => {
+            if (motorEstado === 'on' && autoMode) {
+                acionarMotorAutomatico('off');
+                addAlert('⏱️ Motor desligado automaticamente após 2 minutos (Auto)', 'info');
+            }
+        }, MOTOR_MAX_TIME);
+    } 
+    else if (comando === 'off') {
+        motorEstado = 'off';
+        motorStartTime = 0;
+        atualizarUIMotor('off', true);
+        addAlert('✅ Solo úmido! Irrigação automática desligada', 'success');
+        registrarLog('motor', 'Automático: DESLIGADO por condição de solo úmido');
+        
+        // Envia comando
+        if (database) database.ref('comandos/motor').set({ estado: 'off', modo: 'auto', timestamp: Date.now() });
+    }
+}
+
+/**
+ * Atualiza UI do motor
+ * @param {string} estado - 'on' ou 'off'
+ * @param {boolean} isAuto - Se é ação automática
+ */
+function atualizarUIMotor(estado, isAuto = false) {
+    const modoText = isAuto ? '(Auto)' : '(Manual)';
+    const statusClass = estado === 'on' ? 'online' : 'offline';
+    const statusText = estado === 'on' ? 'Ligado' : 'Desligado';
+    const bgColor = estado === 'on' ? '#d1fae5' : '#fee2e2';
+    const icon = estado === 'on' ? 'fa-play-circle' : 'fa-stop-circle';
+    
+    // Atualiza displays de status
+    document.getElementById('motorStatusDisplay').textContent = statusText + ' ' + modoText;
+    document.getElementById('motorStatusDisplay').className = 'status-value ' + statusClass;
+    document.getElementById('motorStatusDisplay2').textContent = statusText + ' ' + modoText;
+    document.getElementById('motorStatusDisplay2').className = 'status-value ' + statusClass;
+    
+    // Atualiza barra de status
+    const bar = document.getElementById('motorStatusBar');
+    bar.innerHTML = `<i class="fas ${icon}"></i> Motor ${statusText.toUpperCase()} ${modoText}`;
+    bar.style.background = bgColor;
+    
+    // Atualiza botões
+    document.querySelectorAll('.btn-control').forEach(btn => btn.classList.remove('active'));
+    if (estado === 'on') {
+        document.querySelector('.btn-control.on')?.classList.add('active');
+    } else {
+        document.querySelector('.btn-control.off')?.classList.add('active');
+    }
+}
+
+/**
+ * Alterna entre modo automático e manual
  */
 function toggleAutoMode() {
     const toggle = document.getElementById('autoModeToggle');
