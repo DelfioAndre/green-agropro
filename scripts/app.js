@@ -340,85 +340,76 @@ function atualizarDadosFirebase(dados) {
             document.getElementById('sensorSoilStatus').className = 'status-value online';
             document.getElementById('sensorSoilStatusCard').innerHTML = solo + '%';
             document.getElementById('sensorSoilStatusCard').className = 'status-value online';
+                    
+Substitui if (automode) por:
+                if (autoMode) {
+                    const limiteSeco = parseInt(document.getElementById('limiteSeco')?.value || 30);
+                    const limiteUmido = parseInt(document.getElementById('limiteUmido')?.value || 60);
+                    const limiteDesligar = limiteUmido - HYSTERESIS_OFFSET;
+                    const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent === 'Ligado';
 
-            if (autoMode) {
-                const limiteSeco = parseInt(document.getElementById('limiteSeco')?.value || 30);
-                const limiteUmido = parseInt(document.getElementById('limiteUmido')?.value || 60);
-                const limiteDesligar = limiteUmido - HYSTERESIS_OFFSET;
-                const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent.includes('Ligado');
-                document.getElementById('motorStatusDisplay').textContent = 'Ligado (Auto)';
-                document.getElementById('motorStatusDisplay').className = 'status-value online';
-                document.getElementById('motorStatusDisplay2').textContent = 'Ligado (Auto)';
-                document.getElementById('motorStatusDisplay2').className = 'status-value online';
-                document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-play-circle"></i> Motor LIGADO (Automático)';
-                document.getElementById('motorStatusBar').style.background = '#d1fae5';
-                addAlert('💧 Solo seco! Irrigação automática ligada', 'warning');
-                registrarLog('motor', 'Irrigação automática LIGADA - Solo seco: ' + solo + '%');
-                if (database) database.ref('comandos/motor').set({ estado: 'on', timestamp: Date.now() });
-                setTimeout(() => {
-                    if (autoMode && document.getElementById('motorStatusDisplay').textContent.includes('Ligado')) {
+                    // ⭐ Apenas atualiza a interface (não envia comandos)
+                    if (solo < limiteSeco && !motorLigadoAtual) {
+                        motorEstado = 'on';
+                        motorStartTime = Date.now();
+                        document.getElementById('motorStatusDisplay').textContent = 'Ligado (Auto)';
+                        document.getElementById('motorStatusDisplay').className = 'status-value online';
+                        document.getElementById('motorStatusDisplay2').textContent = 'Ligado (Auto)';
+                        document.getElementById('motorStatusDisplay2').className = 'status-value online';
+                        document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-play-circle"></i> Motor LIGADO (Automático)';
+                        document.getElementById('motorStatusBar').style.background = '#d1fae5';
+                        addAlert('💧 Solo seco! Irrigação automática ligada', 'warning');
+                        registrarLog('motor', 'Irrigação automática LIGADA - Solo seco: ' + solo + '%');
+                        // ❌ NÃO envia comando "on" para o Firebase
+                    } else if (solo > limiteDesligar && motorLigadoAtual) {
                         motorEstado = 'off';
+                        motorStartTime = 0;
                         document.getElementById('motorStatusDisplay').textContent = 'Desligado (Auto)';
                         document.getElementById('motorStatusDisplay').className = 'status-value offline';
                         document.getElementById('motorStatusDisplay2').textContent = 'Desligado (Auto)';
                         document.getElementById('motorStatusDisplay2').className = 'status-value offline';
                         document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-stop-circle"></i> Motor DESLIGADO (Automático)';
                         document.getElementById('motorStatusBar').style.background = '#fee2e2';
-                        addAlert('⏱️ Motor desligado automaticamente após 2 minutos (Auto)', 'info');
-                        if (database) database.ref('comandos/motor').set({ estado: 'off', timestamp: Date.now() });
+                        addAlert('✅ Solo úmido! Irrigação automática desligada', 'success');
+                        registrarLog('motor', 'Irrigação automática DESLIGADA - Solo úmido: ' + solo + '%');
+                        // ❌ NÃO envia comando "off" para o Firebase
                     }
-                }, MOTOR_MAX_TIME);
-            } else if (solo > limiteDesligar && motorLigadoAtual) {
-                motorEstado = 'off';
-                motorStartTime = 0;
-                document.getElementById('motorStatusDisplay').textContent = 'Desligado (Auto)';
-                document.getElementById('motorStatusDisplay').className = 'status-value offline';
-                document.getElementById('motorStatusDisplay2').textContent = 'Desligado (Auto)';
-                document.getElementById('motorStatusDisplay2').className = 'status-value offline';
-                document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-stop-circle"></i> Motor DESLIGADO (Automático)';
-                document.getElementById('motorStatusBar').style.background = '#fee2e2';
-                addAlert('✅ Solo úmido! Irrigação automática desligada', 'success');
-                registrarLog('motor', 'Irrigação automática DESLIGADA - Solo úmido: ' + solo + '%');
-                if (database) database.ref('comandos/motor').set({ estado: 'off', timestamp: Date.now() });
-            }
+                }
         }
     }
 }
 
-
 if (autoMode) {
-    const limiteSeco = parseInt(document.getElementById('limiteSeco')?.value || 30);
-    const limiteUmido = parseInt(document.getElementById('limiteUmido')?.value || 60);
-    const limiteDesligar = limiteUmido - HYSTERESIS_OFFSET;
-    const motorLigadoAtual = document.getElementById('motorStatusDisplay').textContent === 'Ligado';
-
-    // ⭐ Apenas atualiza a interface (não envia comandos)
-    if (solo < limiteSeco && !motorLigadoAtual) {
-        motorEstado = 'on';
-        motorStartTime = Date.now();
-        document.getElementById('motorStatusDisplay').textContent = 'Ligado (Auto)';
-        document.getElementById('motorStatusDisplay').className = 'status-value online';
-        document.getElementById('motorStatusDisplay2').textContent = 'Ligado (Auto)';
-        document.getElementById('motorStatusDisplay2').className = 'status-value online';
-        document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-play-circle"></i> Motor LIGADO (Automático)';
-        document.getElementById('motorStatusBar').style.background = '#d1fae5';
-        addAlert('💧 Solo seco! Irrigação automática ligada', 'warning');
-        registrarLog('motor', 'Irrigação automática LIGADA - Solo seco: ' + solo + '%');
-        // ❌ NÃO envia comando "on" para o Firebase
-    } else if (solo > limiteDesligar && motorLigadoAtual) {
-        motorEstado = 'off';
-        motorStartTime = 0;
-        document.getElementById('motorStatusDisplay').textContent = 'Desligado (Auto)';
-        document.getElementById('motorStatusDisplay').className = 'status-value offline';
-        document.getElementById('motorStatusDisplay2').textContent = 'Desligado (Auto)';
-        document.getElementById('motorStatusDisplay2').className = 'status-value offline';
-        document.getElementById('motorStatusBar').innerHTML = '<i class="fas fa-stop-circle"></i> Motor DESLIGADO (Automático)';
-        document.getElementById('motorStatusBar').style.background = '#fee2e2';
-        addAlert('✅ Solo úmido! Irrigação automática desligada', 'success');
-        registrarLog('motor', 'Irrigação automática DESLIGADA - Solo úmido: ' + solo + '%');
-        // ❌ NÃO envia comando "off" para o Firebase
-    }
+    document.querySelector('.btn-control.on').disabled = true;
+    document.querySelector('.btn-control.off').disabled = true;
+    document.querySelector('.btn-control.on').style.opacity = '0.5';
+    document.querySelector('.btn-control.off').style.opacity = '0.5';
+    document.querySelector('.btn-control.auto').classList.add('active');
+    document.getElementById('autoModeToggle').classList.add('active');
+} else {
+    document.querySelector('.btn-control.on').disabled = false;
+    document.querySelector('.btn-control.off').disabled = false;
+    document.querySelector('.btn-control.on').style.opacity = '1';
+    document.querySelector('.btn-control.off').style.opacity = '1';
+    document.querySelector('.btn-control.auto').classList.remove('active');
+    document.getElementById('autoModeToggle').classList.remove('active');
 }
+
+document.getElementById('espStatus').innerHTML = 'Online';
+document.getElementById('espStatus').className = 'status-value online';
+document.getElementById('espStatus2').innerHTML = 'Online';
+document.getElementById('espStatus2').className = 'status-value online';
+document.getElementById('wifiStatus').innerHTML = 'Conectado';
+document.getElementById('wifiStatus').className = 'status-value online';
+document.getElementById('wifiStatus2').innerHTML = 'Conectado';
+document.getElementById('wifiStatus2').className = 'status-value online';
+if (dados.ip) document.getElementById('espIP').textContent = dados.ip;
+document.getElementById('ultimaComunicacao').textContent = new Date().toLocaleTimeString();
+
+document.querySelectorAll('.btn-control').forEach(btn => { btn.disabled = false; btn.style.opacity = '1'; });
+
+atualizarGraficos(dados);
+
 function atualizarGraficos(dados) {
     const hora = new Date().getHours();
     if (charts.mainChart) {
